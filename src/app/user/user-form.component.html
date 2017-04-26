@@ -1,0 +1,50 @@
+<div class="container">
+  <div>
+    <h1>User Form</h1>
+    <form (ngSubmit)="onSubmit()" #userForm="ngForm">
+      <div class="alert alert-info">
+          <strong>Note : </strong>To submit form at least one field is required.
+      </div>
+      <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input type="text" class="form-control" id="firstName"
+               [(ngModel)]="model.firstName" name="firstName"
+               #firstName="ngModel">
+      </div>
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input type="text" class="form-control" id="lastName"
+               [(ngModel)]="model.lastName" name="lastName" #lastName="ngModel">
+        
+      </div>
+      <div class="form-group">
+        <label for="street">Street</label>
+        <input class="form-control" id="street"
+          [(ngModel)]="model.street" name="street" #street="ngModel">
+
+      </div>
+      <div class="form-group">
+        <label for="town">Town</label>
+        <input class="form-control" id="town"
+          [(ngModel)]="model.town" name="town" #town="ngModel">
+          
+      </div>
+      <div class="form-group">
+        <label for="zip">Zip</label>
+        <input class="form-control" id="zip"
+          [(ngModel)]="model.zip" name="zip" OnlyNumber=true #zip="ngModel">
+        
+      </div>
+      <button type="submit" class="btn btn-success" [disabled]="!((model.zip!='' || model.firstName!='' || model.lastName!='' || model.street!='' || model.town!='') && !isSubmitted)">Submit</button>
+      <button type="button" class="btn btn-default" (click)="reset()">Reset</button>
+    </form>
+  </div>
+  <!--<div class="overlay" style="
+    background-color: #a94442;
+    width: 100%;
+    height: 35%;
+    z-index: 7;
+    position: absolute;
+"></div>-->
+</div>
+<div *ngIf= "isSubmitted" class="loader"></div>

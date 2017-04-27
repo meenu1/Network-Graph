@@ -1,4 +1,4 @@
-import { Component , OnInit, OnDestroy } from '@angular/core';
+import { Component , OnInit, OnDestroy,HostListener } from '@angular/core';
 import { Network, DataSet, Node, Edge, IdType } from 'vis';
 import { UserFormService } from '../user/user-form.service';
 declare var $:any;
@@ -19,6 +19,9 @@ export class NetworkGraphComponent implements OnInit{
     public edges: Edge;
     public network : Network;
     constructor(private UserFormService:UserFormService){
+    }
+    @HostListener('click') onclick(){
+      //  var a=<HTMLElement>event.target.innerText;
     }
     addMainObject(){
       let labelName;
@@ -69,11 +72,11 @@ export class NetworkGraphComponent implements OnInit{
                 edgeLabel = edgeLabel.substr(0,edgeLabel.length-2);
                 
                 let labelName = this.UserFormService.userFormData[i].firstName +' '+this.UserFormService.userFormData[i].lastName;
-                var htmlStr = '<div><span class="ellipses"> FirstName : '+this.UserFormService.userFormData[i].firstName+'</span>'
-                +'<span class="ellipses"> LastName : '+this.UserFormService.userFormData[i].lastName+'</span>'
-                +'<span class="ellipses"> Street : '+this.UserFormService.userFormData[i].street+'</span>'
-                +'<span class="ellipses"> Town : '+this.UserFormService.userFormData[i].town+'</span>'
-                +'<span class="ellipses"> Zip : '+this.UserFormService.userFormData[i].zip+'</span>'
+                var htmlStr = '<div><span class="ellipses firstName"> FirstName : '+this.UserFormService.userFormData[i].firstName+'</span>'
+                +'<span class="ellipses lastName"> LastName : '+this.UserFormService.userFormData[i].lastName+'</span>'
+                +'<span class="ellipses street"> Street : '+this.UserFormService.userFormData[i].street+'</span>'
+                +'<span class="ellipses town"> Town : '+this.UserFormService.userFormData[i].town+'</span>'
+                +'<span class="ellipses zip"> Zip : '+this.UserFormService.userFormData[i].zip+'</span>'
                 +'</div>';
                 objArrNodes.push({id: i+2, label:labelName,title:htmlStr});
                 objArrEdges.push({from: 1, to: i+2, label: edgeLabel});
@@ -91,29 +94,13 @@ export class NetworkGraphComponent implements OnInit{
               nodes: nodes,
               edges: edges
             };
-            //var options = {};
-            var options = {interaction:{hover:true}};
+
+            var options = {
+              interaction:{
+                    hover:true
+                }
+            };
             var network = new Network(container, data, options);
-            network.on("click", function (params) {
-             // let obj = objArrNodes[params.nodes[0]-1];
-              // let obj = arr[params.nodes[0]-2];
-              // nodes.update({id: params.nodes[0],title:obj});
-              // console.log(obj);
-            });
-            // network.on("hoverNode", function(params) {
-            //   $('#mynetwork').qtip({
-            //     content: 'Node with ID: ' + params.node,
-            //       show: {
-            //         event: event.type // original event
-            //       },
-            //       position: {
-            //         my: 'top left',
-            //         target: 'mouse',
-            //         adjust: {
-            //           x: 10, y: 10
-            //         }
-            //       }
-            //     });
-            // });
+           
     }
 }

@@ -31,3 +31,24 @@ div.jumbotron h1{
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+.vis-tooltip{
+    position: absolute;
+    width: 218px;
+    height: 175px;
+    background-color: #f5f5f5;
+    border: 1px solid #ccc;
+    border-radius: 9px
+}
+.vis-tooltip span{
+    display: block;
+    padding: 6px;
+}
+.vis-tooltip div{
+    padding: 8px;
+}
+.ellipses{
+    width:200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

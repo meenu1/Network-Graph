@@ -15,7 +15,13 @@ export class UserFormService {
   submitUserForm(obj:any) {
 
     let url = 'http://10.105.104.19:8080/ire/match/byall';
-  
+
+    if(obj.typeOfData == 'Phonetic'){
+        url = 'http://10.105.104.19:8080/ire/match/homophone';
+    }else if(obj.typeOfData == 'EdgeGram'){
+        url = 'http://10.105.104.19:8080/ire/match/custom';
+    }
+    delete obj.typeOfData;
     return this.http.post(url, obj,this.headers)
       .map((res: Response) => {
          return res.json();

@@ -10,14 +10,22 @@ import 'rxjs/add/operator/switchMap';
 export class UserFormComponent {
   private model : any;
   private isSubmitted : boolean = false;
+  private radioData : any;
   constructor(private UserFormService:UserFormService , private router:Router){
     this.model = {
         'firstName': '',
         'lastName':'',
         'street': '',
         'zip' : '',
-        'town': ''
+        'town': '',
+        'typeOfData':'Normal'
     };
+    this.radioData = [
+        {value : 'Normal'},
+        {value : 'Phonetic'},
+        {value : 'EdgeGram'}
+    ]
+
   }
   
   onSubmit() {
@@ -27,7 +35,8 @@ export class UserFormComponent {
         'lastName':this.model.lastName,
         'street': this.model.street,
         'zip' : 0,
-        'town': this.model.town
+        'town': this.model.town,
+        'typeOfData':this.model.typeOfData
     };
     if(this.model.zip != ''){
       obj.zip = parseInt(this.model.zip);
@@ -57,7 +66,8 @@ export class UserFormComponent {
         'lastName':'',
         'street': '',
         'zip' : '',
-        'town': ''
+        'town': '',
+        'typeOfData':'Normal'
     };
   }
 

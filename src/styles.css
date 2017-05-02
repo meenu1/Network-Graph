@@ -8,6 +8,11 @@ div.jumbotron h1{
     font-size: 31px;
     text-align: center;
     font-weight: bold;
+    margin-top: 10px;
+}
+div.jumbotron h1 .btn{
+    float: right;
+    margin-right: 47px;
 }
 .loader {
     border: 8px solid #f3f3f3;

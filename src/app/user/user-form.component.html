@@ -35,6 +35,14 @@
           [(ngModel)]="model.zip" name="zip" OnlyNumber=true #zip="ngModel">
         
       </div>
+      <div class="form-group">
+            
+              <label class="radio-inline" *ngFor="let valData of radioData">
+                <input type="radio" [value]="valData.value"  [(ngModel)]="model.typeOfData" name="typeOfData">
+                {{valData.value}}
+              </label>
+          
+      </div>
       <button type="submit" class="btn btn-success" [disabled]="!((model.zip!='' || model.firstName!='' || model.lastName!='' || model.street!='' || model.town!='') && !isSubmitted)">Submit</button>
       <button type="button" class="btn btn-default" (click)="reset()">Reset</button>
     </form>

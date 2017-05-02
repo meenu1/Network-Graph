@@ -16,12 +16,12 @@ export class UserFormService {
 
     let url = 'http://10.105.104.19:8080/ire/match/byall';
 
-    if(obj.typeOfData == 'Phonetic'){
+    if(obj.person.typeOfData == 'Phonetic'){
         url = 'http://10.105.104.19:8080/ire/match/homophone';
-    }else if(obj.typeOfData == 'EdgeGram'){
+    }else if(obj.person.typeOfData == 'EdgeGram'){
         url = 'http://10.105.104.19:8080/ire/match/custom';
     }
-    delete obj.typeOfData;
+    delete obj.person.typeOfData;
     return this.http.post(url, obj,this.headers)
       .map((res: Response) => {
          return res.json();

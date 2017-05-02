@@ -1,6 +1,9 @@
 <div class="container">
   <div>
     <h1>User Form</h1>
+    <div *ngIf = "noResultFound" class="alert alert-danger">
+          <strong>Note : </strong> No result found please try again later.
+    </div>
     <form (ngSubmit)="onSubmit()" #userForm="ngForm">
       <div class="alert alert-info">
           <strong>Note : </strong>To submit form at least one field is required.

@@ -57,3 +57,7 @@ div.jumbotron h1 .btn{
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.container{
+    margin-right:0;
+    margin-left:0;
+}

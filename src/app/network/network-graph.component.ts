@@ -13,6 +13,34 @@ import { Router } from '@angular/router';
           margin: 20px;
           margin: 0 auto;
     }
+    .selected-options{
+          position: absolute;
+          top: 106px;
+          height: 300px;
+          width: 300px;
+          right: 27px;
+          border: 1px solid #ccc;
+    }
+    .selected-filter-data{
+          padding: 10px;
+          display: inline-block;
+          width: 114px;
+    }
+    .col-sm-2{
+          padding-top: 8px;
+          padding-right: 23px;
+    }
+    .col-sm-2 button{
+        padding: 4px;
+        opacity: 1;
+        border: 1px solid #ccc;
+        border-radius: 57px;
+        padding-top: 0;
+        padding-bottom: 0;
+      }
+      .btn-success{
+            margin-left: 9px;
+      }
   `]
 })
 export class NetworkGraphComponent implements OnInit{
@@ -23,12 +51,107 @@ export class NetworkGraphComponent implements OnInit{
     private backup :any = [];
     private totalNodes :any;
     private totalEdge :any;
+    private graphSelection :Boolean = false;
+    private selectedFilter :any = [];
+    private showLoader : Boolean = false;
+    private noResultFound : boolean = false;
     constructor(private UserFormService:UserFormService,private router:Router){
     }
     @HostListener('click') onclick(){
-      var target = <HTMLElement>event.target;
-      if(target.parentElement.parentElement.className === "vis-tooltip"){
+      let target = <HTMLElement>event.target;
+      if(target.parentElement.parentElement.className === "vis-tooltip" && !this.graphSelection){
         
+            let dataObject = this.getValues(target);
+            this.showLoader = true;
+            this.getConnectionNetworkData(dataObject);
+            //this.data.nodes.update({id: 2, label:'Meenu',title:''});
+      }else if(target.parentElement.parentElement.className === "vis-tooltip" && this.graphSelection){
+            var baseData = target.innerText.split(':')[0].trim();
+            var substr  = baseData.substring(0,1);
+            baseData = substr.toLowerCase() + baseData.substring(1);
+            var baseValue = target.innerText.split(':')[1].trim();
+            var idElm = <HTMLElement>(target.parentElement.lastElementChild);
+            let id = parseInt(idElm.innerText.trim());
+            let found = false;
+            let isDuplicate = false;
+            
+            if(this.selectedFilter.length>0){
+                for(let i=0;i<this.selectedFilter.length;i++){
+                    
+                    if(this.selectedFilter[i].id == id ){
+                        isDuplicate = true;
+                    }
+                    if(this.selectedFilter[i].baseData == baseData){
+                      if(isDuplicate){
+                          this.selectedFilter[i] = {'baseData':baseData,'baseValue':baseValue};
+                      }else{
+                          this.selectedFilter[i] = {'baseData':baseData,'baseValue':baseValue,'id':id};
+                      }
+                      found = true;
+                    }
+                }
+            }
+            if(!found){
+              if(isDuplicate){
+                  this.selectedFilter.push({'baseData':baseData,'baseValue':baseValue});
+              }else{
+                  this.selectedFilter.push({'baseData':baseData,'baseValue':baseValue,'id':id});
+              }
+            }
+      }
+    }
+    getConnectionNetworkData(dataObject:any){
+       let jsonTemp = {
+          "score":1,
+          "size":20,
+          "person":dataObject.objct
+       };
+      this.UserFormService.submitUserForm(jsonTemp).subscribe((data) => {
+               this.showLoader = false;
+               if(data.length>0){
+                  let arrData = data;
+                  var totalNodes = this.totalNodes.length;
+                  this.totalNodes.push({id: totalNodes+1, label:dataObject.baseValue});
+                  let alreadyFound = false;
+                  
+                  for(let j=0;j<arrData.length;j++){
+                        let labelName = arrData[j].firstName +' '+arrData[j].lastName;
+                        var htmlStr = '<div><span class="ellipses firstName"> FirstName : '+arrData[j].firstName+'</span>'
+                          +'<span class="ellipses lastName"> LastName : '+arrData[j].lastName+'</span>'
+                          +'<span class="ellipses street"> Street : '+arrData[j].street+'</span>'
+                          +'<span class="ellipses town"> Town : '+arrData[j].town+'</span>'
+                          +'<span class="ellipses zip"> Zip : '+arrData[j].zip+'</span>'
+                          +'<span style="display:none;">'+(totalNodes+j+2)+'</span>'
+                          +'</div>';
+                        this.totalNodes.push({id: totalNodes+j+2, label:labelName,title:htmlStr});
+                        this.totalEdge.push({from: totalNodes+1, to: totalNodes+j+2, label: dataObject.baseData});
+                    
+                  }
+                  if(this.selectedFilter.length>0){
+                    for(let i=0;i<this.selectedFilter.length;i++){
+                      if(this.selectedFilter[i].id != undefined){
+                        this.totalEdge.push({from : totalNodes+1,to:this.selectedFilter[i].id,label: this.selectedFilter[i].baseDataShort});
+                      }
+                    }
+                  }else{
+                    this.totalEdge.push({from : totalNodes+1,to:dataObject.id,label:dataObject.baseData});
+                  }
+                  this.createGraph(this.totalNodes,this.totalEdge);
+                  this.graphSelection = true;
+                  let containerElem = <HTMLElement>document.querySelector('.container');
+                  containerElem.style.marginRight='0px';
+                  containerElem.style.marginLeft='0px';
+                  
+               }else{
+                 this.noResultFound = true;
+                 setTimeout(function(){
+                    this.noResultFound = false;
+                 },3000);
+                 
+               }
+            });
+    }
+    getValues(target:any){
             let obj = {
               'firstName': '',
               'lastName':'',
@@ -36,10 +159,10 @@ export class NetworkGraphComponent implements OnInit{
               'zip' : 0,
               'town': ''
             };
-            let objTemp = Object.assign({}, obj);
             var baseData = target.innerText.split(':')[0].trim();
             var baseValue = target.innerText.split(':')[1].trim();
-
+            var idElm = <HTMLElement>(target.parentElement.lastElementChild);
+            let id = parseInt(idElm.innerText.trim());
             obj.firstName = null;
             obj.lastName = null;
             obj.street = null;
@@ -47,61 +170,69 @@ export class NetworkGraphComponent implements OnInit{
             
             if(baseData == 'Zip'){
               obj.zip = parseInt(baseValue);
-              objTemp.zip = parseInt(baseValue);
               baseData = 'ZP';
             }
             else if(baseData == 'FirstName'){
               obj.firstName = baseValue;
-              objTemp.firstName = baseValue;
               baseData = 'FN';
             }
             else if(baseData == 'LastName'){
               obj.lastName = baseValue;
-              objTemp.lastName = baseValue;
               baseData = 'LN';
             }
             else if(baseData == 'Street'){
               obj.street = baseValue;
-              objTemp.street = baseValue;
               baseData = 'ST';
             }
             else if(baseData == 'Town'){
               obj.town = baseValue;
-              objTemp.town = baseValue;
               baseData = 'TW';
             }
-            this.UserFormService.submitUserForm(obj).subscribe((data) => {
-                // this.UserFormService.userFormData = data;
-                // this.UserFormService.userFormMainData = objTemp;
-                let arrData = data;
-                var totalNodes = this.totalNodes.length;
-                this.totalNodes.push({id: totalNodes+1, label:baseValue});
-                let alreadyFound = false;
-                
-                for(let j=0;j<arrData.length;j++){
-                      let labelName = arrData[j].firstName +' '+arrData[j].lastName;
-                      var htmlStr = '<div><span class="ellipses firstName"> FirstName : '+arrData[j].firstName+'</span>'
-                        +'<span class="ellipses lastName"> LastName : '+arrData[j].lastName+'</span>'
-                        +'<span class="ellipses street"> Street : '+arrData[j].street+'</span>'
-                        +'<span class="ellipses town"> Town : '+arrData[j].town+'</span>'
-                        +'<span class="ellipses zip"> Zip : '+arrData[j].zip+'</span>'
-                        +'</div>';
-                      this.totalNodes.push({id: totalNodes+j+2, label:labelName,title:htmlStr});
-                      this.totalEdge.push({from: totalNodes+1, to: totalNodes+j+2, label: baseData});
-                  
-                }
-                for(let i=0;i<this.backup.length;i++){
-                  if(this.backup[i].firstName == baseValue || this.backup[i].lastName == baseValue || this.backup[i].zip == baseValue || this.backup[i].street == baseValue || this.backup[i].town == baseValue){
-                        this.totalEdge[i+1] = {from : totalNodes+1,to:i+2,label:baseData};
-                  }
-                }
-                this.createGraph(this.totalNodes,this.totalEdge);
-            });
-            //this.data.nodes.update({id: 2, label:'Meenu',title:''});
-      }
+            return {'objct' : obj,'baseData':baseData,'baseValue':baseValue,'id':id};
+    }
+    onSubmitFilter(){
+        let dataObject:any = {};
+        this.showLoader = true;
+        dataObject.objct = {};
+        dataObject.objct.firstName = null;
+        dataObject.objct.lastName = null;
+        dataObject.objct.street = null;
+        dataObject.objct.town = null;
+        dataObject.objct.zip = 0;
+         
+        let baseDataShortTemp = '';
+        for(let i=0;i<this.selectedFilter.length;i++){
+             dataObject.objct[this.selectedFilter[i].baseData] = this.selectedFilter[i].baseValue;
+             let baseDataShort = '';
+             if(this.selectedFilter[i].baseData == 'zip'){
+              baseDataShortTemp = baseDataShortTemp + 'ZP, ';
+              baseDataShort = "ZP";
+            }
+            else if(this.selectedFilter[i].baseData == 'firstName'){
+              baseDataShortTemp = baseDataShortTemp+'FN, ';
+              baseDataShort = "FN";
+            }
+            else if(this.selectedFilter[i].baseData == 'lastName'){
+              baseDataShortTemp = baseDataShortTemp+'LN, ';
+              baseDataShort = "LN";
+            }
+            else if(this.selectedFilter[i].baseData == 'street'){
+              baseDataShortTemp = baseDataShortTemp+'ST, ';
+              baseDataShort = "ST";
+            }
+            else if(this.selectedFilter[i].baseData == 'town'){
+              baseDataShortTemp = baseDataShortTemp+'TW, ';
+              baseDataShort = "TW";
+            }
+            this.selectedFilter[i].baseDataShort = baseDataShort;
+        }
+        baseDataShortTemp = baseDataShortTemp.substr(0,baseDataShortTemp.length-2);
+        dataObject.objct = dataObject.objct;
+        dataObject.baseData = baseDataShortTemp;
+        this.getConnectionNetworkData(dataObject);
     }
     addMainObject(){
-      let labelName;
+        let labelName = "";
         if(this.UserFormService.userFormMainData.firstName!=''){
           labelName = this.UserFormService.userFormMainData.firstName + ' ';
         }
@@ -155,6 +286,7 @@ export class NetworkGraphComponent implements OnInit{
                 +'<span class="ellipses street"> Street : '+arr[i].street+'</span>'
                 +'<span class="ellipses town"> Town : '+arr[i].town+'</span>'
                 +'<span class="ellipses zip"> Zip : '+arr[i].zip+'</span>'
+                +'<span style="display:none;">'+(i+2)+'</span>'
                 +'</div>';
                 objArrNodes.push({id: i+2, label:labelName,title:htmlStr});
                 objArrEdges.push({id: i+1,from: 1, to: i+2, label: edgeLabel});
@@ -181,11 +313,28 @@ export class NetworkGraphComponent implements OnInit{
             var options = {
               interaction:{
                     hover:true
+                },
+                layout: {
+                  improvedLayout:true,
+                  hierarchical: {
+                    enabled:false,
+                    levelSeparation: 150,
+                    nodeSpacing: 100,
+                    treeSpacing: 200,
+                    blockShifting: true,
+                    edgeMinimization: true,
+                    parentCentralization: true,
+                    direction: 'UD',        // UD, DU, LR, RL
+                    sortMethod: 'hubsize'   // hubsize, directed
+                  }
                 }
             };
             var network = new Network(container, this.data, options);
     }
     backToForm(){
         this.router.navigate(['/user']);
+    }
+    removeSelectedItem(index:number){
+      this.selectedFilter.splice(index,1);
     }
 }

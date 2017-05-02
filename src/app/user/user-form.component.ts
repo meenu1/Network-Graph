@@ -11,6 +11,7 @@ export class UserFormComponent {
   private model : any;
   private isSubmitted : boolean = false;
   private radioData : any;
+  private noResultFound : boolean = false;
   constructor(private UserFormService:UserFormService , private router:Router){
     this.model = {
         'firstName': '',
@@ -53,11 +54,20 @@ export class UserFormComponent {
     if(this.model.town.trim() ==''){
         obj.town = null;
     }
-
-    this.UserFormService.submitUserForm(obj).subscribe((data) => {
+    let jsonTemp = {
+        "score":1,
+        "size":20,
+        "person":obj
+    };
+    this.UserFormService.submitUserForm(jsonTemp).subscribe((data) => {
         this.UserFormService.userFormData = data;
         this.UserFormService.userFormMainData = this.model;
-        this.router.navigate(['/network-graph']);
+        if(this.UserFormService.userFormData.length > 0){
+            this.router.navigate(['/network-graph']);
+        }else{
+            this.noResultFound = true;
+            this.isSubmitted = false;
+        }
      });
   }
   reset(){

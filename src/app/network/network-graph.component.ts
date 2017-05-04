@@ -6,42 +6,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'network-graph',
   templateUrl: './network-graph.component.html',
-  styles:[`
-    #mynetwork{
-          height: 500px;
-          border: 1px solid #ccc;
-          margin: 20px;
-          margin: 0 auto;
-    }
-    .selected-options{
-          position: absolute;
-          top: 106px;
-          height: 300px;
-          width: 300px;
-          right: 27px;
-          border: 1px solid #ccc;
-    }
-    .selected-filter-data{
-          padding: 10px;
-          display: inline-block;
-          width: 114px;
-    }
-    .col-sm-2{
-          padding-top: 8px;
-          padding-right: 23px;
-    }
-    .col-sm-2 button{
-        padding: 4px;
-        opacity: 1;
-        border: 1px solid #ccc;
-        border-radius: 57px;
-        padding-top: 0;
-        padding-bottom: 0;
-      }
-      .btn-success{
-            margin-left: 9px;
-      }
-  `]
+  styleUrls : ['./network-graph.component.css']
 })
 export class NetworkGraphComponent implements OnInit{
     public nodes: Node;
@@ -55,23 +20,36 @@ export class NetworkGraphComponent implements OnInit{
     private selectedFilter :any = [];
     private showLoader : Boolean = false;
     private noResultFound : boolean = false;
+    private duplicateNodesChecking = new Set();
     constructor(private UserFormService:UserFormService,private router:Router){
     }
     @HostListener('click') onclick(){
+
       let target = <HTMLElement>event.target;
-      if(target.parentElement.parentElement.className === "vis-tooltip" && !this.graphSelection){
-        
-            let dataObject = this.getValues(target);
-            this.showLoader = true;
-            this.getConnectionNetworkData(dataObject);
-            //this.data.nodes.update({id: 2, label:'Meenu',title:''});
-      }else if(target.parentElement.parentElement.className === "vis-tooltip" && this.graphSelection){
+      if(target.parentElement.parentElement.className === "vis-tooltip"){
+
             var baseData = target.innerText.split(':')[0].trim();
-            var substr  = baseData.substring(0,1);
-            baseData = substr.toLowerCase() + baseData.substring(1);
             var baseValue = target.innerText.split(':')[1].trim();
             var idElm = <HTMLElement>(target.parentElement.lastElementChild);
             let id = parseInt(idElm.innerText.trim());
+
+            var substr  = baseData.substring(0,1);
+            baseData = substr.toLowerCase() + baseData.substring(1);
+      
+            if(!this.graphSelection){
+              
+                  let dataObject = this.getValues(baseData,baseValue,id);
+                  this.showLoader = true;
+                  this.selectedFilter.push({'baseData':baseData,'baseValue':baseValue,'id':id,'baseDataShort':dataObject.baseDataShort});
+                  this.getConnectionNetworkData(dataObject);
+
+            }else if(this.graphSelection){
+                 
+                  this.graphSelectionFiltering(baseData,baseValue,id);
+            }
+      }
+    }
+    graphSelectionFiltering(baseData:string,baseValue:any,id:number){
             let found = false;
             let isDuplicate = false;
             
@@ -98,45 +76,67 @@ export class NetworkGraphComponent implements OnInit{
                   this.selectedFilter.push({'baseData':baseData,'baseValue':baseValue,'id':id});
               }
             }
-      }
     }
     getConnectionNetworkData(dataObject:any){
+       dataObject.objct.typeOfData = this.UserFormService.typeOfData;
        let jsonTemp = {
-          "score":1,
-          "size":20,
+          "score":this.UserFormService.score,
+          "size":this.UserFormService.size,
           "person":dataObject.objct
        };
-      this.UserFormService.submitUserForm(jsonTemp).subscribe((data) => {
+       this.UserFormService.submitUserForm(jsonTemp).subscribe((data) => {
                this.showLoader = false;
                if(data.length>0){
                   let arrData = data;
                   var totalNodes = this.totalNodes.length;
+                  var totalEdges = this.totalEdge.length;
+                  //create root node
                   this.totalNodes.push({id: totalNodes+1, label:dataObject.baseValue});
                   let alreadyFound = false;
-                  
-                  for(let j=0;j<arrData.length;j++){
-                        let labelName = arrData[j].firstName +' '+arrData[j].lastName;
-                        var htmlStr = '<div><span class="ellipses firstName"> FirstName : '+arrData[j].firstName+'</span>'
-                          +'<span class="ellipses lastName"> LastName : '+arrData[j].lastName+'</span>'
-                          +'<span class="ellipses street"> Street : '+arrData[j].street+'</span>'
-                          +'<span class="ellipses town"> Town : '+arrData[j].town+'</span>'
-                          +'<span class="ellipses zip"> Zip : '+arrData[j].zip+'</span>'
-                          +'<span style="display:none;">'+(totalNodes+j+2)+'</span>'
-                          +'</div>';
-                        this.totalNodes.push({id: totalNodes+j+2, label:labelName,title:htmlStr});
-                        this.totalEdge.push({from: totalNodes+1, to: totalNodes+j+2, label: dataObject.baseData});
-                    
-                  }
+
                   if(this.selectedFilter.length>0){
-                    for(let i=0;i<this.selectedFilter.length;i++){
-                      if(this.selectedFilter[i].id != undefined){
-                        this.totalEdge.push({from : totalNodes+1,to:this.selectedFilter[i].id,label: this.selectedFilter[i].baseDataShort});
-                      }
+                    for(let j=0;j<this.totalNodes.length;j++){
+                      if(this.totalNodes[j].data != undefined){
+                          let edgeLabel = '';
+                          for(let i=0;i<this.selectedFilter.length;i++){
+                            
+                            if(this.totalNodes[j].data[this.selectedFilter[i].baseData] == this.selectedFilter[i].baseValue){
+                                edgeLabel = edgeLabel + this.selectedFilter[i].baseDataShort + ', ';
+                            }
+                          }
+                          if(edgeLabel != ''){
+                              edgeLabel = edgeLabel.substr(0,edgeLabel.length-2);
+                              this.totalEdge.push({from : totalNodes+1,to:this.totalNodes[j].id,label: edgeLabel});
+                          }
                     }
-                  }else{
-                    this.totalEdge.push({from : totalNodes+1,to:dataObject.id,label:dataObject.baseData});
+                    }
                   }
+                  let index = 0;
+                  totalEdges = this.totalEdge.length;
+                  for(let j=0;j<arrData.length;j++){
+                       
+                        if(!this.duplicateNodesChecking.has(arrData[j].customer_no)){
+                     
+                            let labelName = arrData[j].firstName +' '+arrData[j].lastName;
+                            var htmlStr = '<div><span class="ellipses firstName"> FirstName : '+arrData[j].firstName+'</span>'
+                              +'<span class="ellipses lastName"> LastName : '+arrData[j].lastName+'</span>'
+                              +'<span class="ellipses street"> Street : '+arrData[j].street+'</span>'
+                              +'<span class="ellipses town"> Town : '+arrData[j].town+'</span>'
+                              +'<span class="ellipses zip"> Zip : '+arrData[j].zip+'</span>'
+                              +'<span style="display:none;">'+(totalNodes+j+2)+'</span>'
+                              +'</div>';
+                            this.totalNodes.push({id: totalNodes+j+2-index, label:labelName,title:htmlStr,data:arrData[j]});
+                            this.totalEdge.push({from: totalNodes+1, to: totalNodes+j+2-index, label: dataObject.baseDataShort});
+                        } else{
+                            index++;
+                        }  
+                  }
+                  totalEdges = this.totalEdge.length;
+
                   this.createGraph(this.totalNodes,this.totalEdge);
+                  if(!this.graphSelection){
+                    this.selectedFilter = [];
+                  }
                   this.graphSelection = true;
                   let containerElem = <HTMLElement>document.querySelector('.container');
                   containerElem.style.marginRight='0px';
@@ -144,14 +144,15 @@ export class NetworkGraphComponent implements OnInit{
                   
                }else{
                  this.noResultFound = true;
+                 let preserveThis = this;
                  setTimeout(function(){
-                    this.noResultFound = false;
-                 },3000);
+                    preserveThis.noResultFound = false;
+                 },5000);
                  
                }
             });
     }
-    getValues(target:any){
+    getValues(baseData:string,baseValue:any,id:number){
             let obj = {
               'firstName': '',
               'lastName':'',
@@ -159,36 +160,34 @@ export class NetworkGraphComponent implements OnInit{
               'zip' : 0,
               'town': ''
             };
-            var baseData = target.innerText.split(':')[0].trim();
-            var baseValue = target.innerText.split(':')[1].trim();
-            var idElm = <HTMLElement>(target.parentElement.lastElementChild);
-            let id = parseInt(idElm.innerText.trim());
+            
+            let baseDataShort = '';
             obj.firstName = null;
             obj.lastName = null;
             obj.street = null;
             obj.town = null;
             
-            if(baseData == 'Zip'){
+            if(baseData == 'zip'){
               obj.zip = parseInt(baseValue);
-              baseData = 'ZP';
+              baseDataShort = 'ZP';
             }
-            else if(baseData == 'FirstName'){
+            else if(baseData == 'firstName'){
               obj.firstName = baseValue;
-              baseData = 'FN';
+              baseDataShort = 'FN';
             }
-            else if(baseData == 'LastName'){
+            else if(baseData == 'lastName'){
               obj.lastName = baseValue;
-              baseData = 'LN';
+              baseDataShort = 'LN';
             }
-            else if(baseData == 'Street'){
+            else if(baseData == 'street'){
               obj.street = baseValue;
-              baseData = 'ST';
+              baseDataShort = 'ST';
             }
-            else if(baseData == 'Town'){
+            else if(baseData == 'town'){
               obj.town = baseValue;
-              baseData = 'TW';
+              baseDataShort = 'TW';
             }
-            return {'objct' : obj,'baseData':baseData,'baseValue':baseValue,'id':id};
+            return {'objct' : obj,'baseData':baseData,'baseDataShort':baseDataShort,'baseValue':baseValue,'id':id};
     }
     onSubmitFilter(){
         let dataObject:any = {};
@@ -202,33 +201,33 @@ export class NetworkGraphComponent implements OnInit{
          
         let baseDataShortTemp = '';
         for(let i=0;i<this.selectedFilter.length;i++){
-             dataObject.objct[this.selectedFilter[i].baseData] = this.selectedFilter[i].baseValue;
-             let baseDataShort = '';
-             if(this.selectedFilter[i].baseData == 'zip'){
-              baseDataShortTemp = baseDataShortTemp + 'ZP, ';
-              baseDataShort = "ZP";
-            }
-            else if(this.selectedFilter[i].baseData == 'firstName'){
-              baseDataShortTemp = baseDataShortTemp+'FN, ';
-              baseDataShort = "FN";
-            }
-            else if(this.selectedFilter[i].baseData == 'lastName'){
-              baseDataShortTemp = baseDataShortTemp+'LN, ';
-              baseDataShort = "LN";
-            }
-            else if(this.selectedFilter[i].baseData == 'street'){
-              baseDataShortTemp = baseDataShortTemp+'ST, ';
-              baseDataShort = "ST";
-            }
-            else if(this.selectedFilter[i].baseData == 'town'){
-              baseDataShortTemp = baseDataShortTemp+'TW, ';
-              baseDataShort = "TW";
-            }
-            this.selectedFilter[i].baseDataShort = baseDataShort;
+              dataObject.objct[this.selectedFilter[i].baseData] = this.selectedFilter[i].baseValue;
+              let baseDataShort = '';
+              if(this.selectedFilter[i].baseData == 'zip'){
+                baseDataShortTemp = baseDataShortTemp + 'ZP, ';
+                baseDataShort = "ZP";
+              }
+              else if(this.selectedFilter[i].baseData == 'firstName'){
+                baseDataShortTemp = baseDataShortTemp+'FN, ';
+                baseDataShort = "FN";
+              }
+              else if(this.selectedFilter[i].baseData == 'lastName'){
+                baseDataShortTemp = baseDataShortTemp+'LN, ';
+                baseDataShort = "LN";
+              }
+              else if(this.selectedFilter[i].baseData == 'street'){
+                baseDataShortTemp = baseDataShortTemp+'ST, ';
+                baseDataShort = "ST";
+              }
+              else if(this.selectedFilter[i].baseData == 'town'){
+                baseDataShortTemp = baseDataShortTemp+'TW, ';
+                baseDataShort = "TW";
+              }
+              this.selectedFilter[i].baseDataShort = baseDataShort;
         }
         baseDataShortTemp = baseDataShortTemp.substr(0,baseDataShortTemp.length-2);
         dataObject.objct = dataObject.objct;
-        dataObject.baseData = baseDataShortTemp;
+        dataObject.baseDataShort = baseDataShortTemp
         this.getConnectionNetworkData(dataObject);
     }
     addMainObject(){
@@ -288,7 +287,8 @@ export class NetworkGraphComponent implements OnInit{
                 +'<span class="ellipses zip"> Zip : '+arr[i].zip+'</span>'
                 +'<span style="display:none;">'+(i+2)+'</span>'
                 +'</div>';
-                objArrNodes.push({id: i+2, label:labelName,title:htmlStr});
+                this.duplicateNodesChecking.add(arr[i].customer_no);
+                objArrNodes.push({id: i+2, label:labelName,title:htmlStr,data:arr[i]});
                 objArrEdges.push({id: i+1,from: 1, to: i+2, label: edgeLabel});
                 
             }

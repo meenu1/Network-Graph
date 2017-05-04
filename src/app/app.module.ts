@@ -1,8 +1,10 @@
 import { NgModule }      from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { FormsModule }   from '@angular/forms';
+import { FormsModule ,ReactiveFormsModule}   from '@angular/forms';
 import { AlertModule } from 'ngx-bootstrap';
 import { HttpModule } from '@angular/http';
+import {MdSliderModule} from '@angular/material';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent }  from './app.component';
 import { UserFormComponent } from './user/user-form.component';
@@ -15,13 +17,16 @@ import { OnlyNumber } from './user/user-form.directive';
     FormsModule,
     AlertModule.forRoot(),
     AppRoutingModule,
-    HttpModule
+    HttpModule,
+    MdSliderModule,
+    BrowserAnimationsModule,
+    ReactiveFormsModule
   ],
   declarations: [
     AppComponent,
     UserFormComponent,
     NetworkGraphComponent,
-    OnlyNumber
+    OnlyNumber 
   ],
   bootstrap: [ AppComponent ],
   providers:[UserFormService]

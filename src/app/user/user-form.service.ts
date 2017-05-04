@@ -9,6 +9,10 @@ import 'rxjs/add/operator/catch';
 export class UserFormService {
   public userFormData : any;
   public userFormMainData : any;
+  public size : number;
+  public score : number;
+  public typeOfData : string;
+  
   private headers = new Headers({'Content-Type': 'application/json'});
   constructor(private http: Http) { }
 

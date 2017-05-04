@@ -61,3 +61,12 @@ div.jumbotron h1 .btn{
     margin-right:0;
     margin-left:0;
 }
+.form-group input[type="number"]{
+    width:50px;
+}
+label{
+    width:80px;
+}
+.mat-slider-horizontal{
+    width:87%;
+}

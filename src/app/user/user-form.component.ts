@@ -1,17 +1,43 @@
-import { Component } from '@angular/core';
+import { Component ,ViewEncapsulation} from '@angular/core';
 import { Router } from '@angular/router';
 import { UserFormService } from './user-form.service';
 
 import 'rxjs/add/operator/switchMap';
 @Component({
   selector: 'user-form',
-  templateUrl: './user-form.component.html'
+  templateUrl: './user-form.component.html',
+  encapsulation: ViewEncapsulation.None
 })
 export class UserFormComponent {
   private model : any;
   private isSubmitted : boolean = false;
   private radioData : any;
   private noResultFound : boolean = false;
+  private errMsg = 'No result found please try again later.';
+  private score = {
+    autoTicks : false,
+    disabled : false,
+    invert : false,
+    max : 15,
+    min : 0,
+    showTicks : true,
+    step : .5,
+    thumbLabel : true,
+    value : 0,
+    vertical : false
+  }
+  private size = {
+    autoTicks : false,
+    disabled : false,
+    invert : false,
+    max : 100,
+    min : 0,
+    showTicks : true,
+    step : 1,
+    thumbLabel : true,
+    value : 0,
+    vertical : false
+  }
   constructor(private UserFormService:UserFormService , private router:Router){
     this.model = {
         'firstName': '',
@@ -55,16 +81,24 @@ export class UserFormComponent {
         obj.town = null;
     }
     let jsonTemp = {
-        "score":1,
-        "size":20,
+        "score":this.score.value,
+        "size":this.size.value,
         "person":obj
     };
+
+    this.UserFormService.size = this.size.value;
+    this.UserFormService.score = this.score.value;
+    this.UserFormService.typeOfData = obj.typeOfData;
+
     this.UserFormService.submitUserForm(jsonTemp).subscribe((data) => {
         this.UserFormService.userFormData = data;
         this.UserFormService.userFormMainData = this.model;
         if(this.UserFormService.userFormData.length > 0){
             this.router.navigate(['/network-graph']);
         }else{
+            if(this.size.value == 0){
+                this.errMsg = 'Size should be more than 0.';
+            }
             this.noResultFound = true;
             this.isSubmitted = false;
         }
@@ -79,6 +113,8 @@ export class UserFormComponent {
         'town': '',
         'typeOfData':'Normal'
     };
+    this.size.value = 0;
+    this.score.value = 0;
   }
 
 }

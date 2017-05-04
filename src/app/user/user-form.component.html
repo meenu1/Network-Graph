@@ -2,7 +2,7 @@
   <div>
     <h1>User Form</h1>
     <div *ngIf = "noResultFound" class="alert alert-danger">
-          <strong>Note : </strong> No result found please try again later.
+          <strong>Note : </strong> {{errMsg}}
     </div>
     <form (ngSubmit)="onSubmit()" #userForm="ngForm">
       <div class="alert alert-info">
@@ -37,6 +37,38 @@
         <input class="form-control" id="zip"
           [(ngModel)]="model.zip" name="zip" OnlyNumber=true #zip="ngModel">
         
+      </div>
+      <div class="form-group" style="margin-top: 27px;">
+        <label> Score </label>
+            <md-slider [(ngModel)]="score.value" name="score-slider"
+              class="example-margin"
+              [disabled]="score.disabled"
+              [invert]="score.invert"
+              [max]="score.max"
+              [min]="score.min"
+              [step]="score.step"
+              [thumb-label]="score.thumbLabel"
+              [tick-interval]="score.tickInterval"
+              [value]="score.value"
+              [vertical]="score.vertical">
+          </md-slider>
+          <input type="number" max="15" min="0" step=".5" [(ngModel)]="score.value" name="score">
+      </div>
+      <div class="form-group">
+        <label> Size </label>
+            <md-slider  [(ngModel)]="size.value" name="size-slider"
+              class="example-margin"
+              [disabled]="size.disabled"
+              [invert]="size.invert"
+              [max]="size.max"
+              [min]="size.min"
+              [step]="size.step"
+              [thumb-label]="size.thumbLabel"
+              [tick-interval]="size.tickInterval"
+              [value]="size.value"
+              [vertical]="size.vertical">
+          </md-slider>
+          <input type="number" max="100" min="0" [(ngModel)]="size.value" name="size">
       </div>
       <div class="form-group">
             

@@ -200,9 +200,11 @@ export class NetworkGraphComponent implements OnInit{
         dataObject.objct.zip = 0;
          
         let baseDataShortTemp = '';
+        let baseValueTemp = '';
         for(let i=0;i<this.selectedFilter.length;i++){
               dataObject.objct[this.selectedFilter[i].baseData] = this.selectedFilter[i].baseValue;
               let baseDataShort = '';
+              baseValueTemp = baseValueTemp + this.selectedFilter[i].baseValue + ',';
               if(this.selectedFilter[i].baseData == 'zip'){
                 baseDataShortTemp = baseDataShortTemp + 'ZP, ';
                 baseDataShort = "ZP";
@@ -227,7 +229,8 @@ export class NetworkGraphComponent implements OnInit{
         }
         baseDataShortTemp = baseDataShortTemp.substr(0,baseDataShortTemp.length-2);
         dataObject.objct = dataObject.objct;
-        dataObject.baseDataShort = baseDataShortTemp
+        dataObject.baseDataShort = baseDataShortTemp;
+        dataObject.baseValue = baseValueTemp.substr(0,baseValueTemp.length-1);
         this.getConnectionNetworkData(dataObject);
     }
     addMainObject(){
@@ -327,9 +330,24 @@ export class NetworkGraphComponent implements OnInit{
                     direction: 'UD',        // UD, DU, LR, RL
                     sortMethod: 'hubsize'   // hubsize, directed
                   }
+                },
+                physics: {
+                  
+                    maxVelocity: 146,
+                    solver: 'forceAtlas2Based',
+                    timestep: 0.35,
+                    stabilization: {
+                        enabled: true,
+                        iterations: 1000,
+                        updateInterval: 25
+                    }
+
                 }
             };
             var network = new Network(container, this.data, options);
+            network.on("stabilizationIterationsDone", function () {
+                network.setOptions( { physics: false } );
+            });
     }
     backToForm(){
         this.router.navigate(['/user']);
